@@ -5,4 +5,4 @@ app = FastAPI()
 
 @app.post("/ping")
 async def greet():
-    return "poig"
+    return "pong"
