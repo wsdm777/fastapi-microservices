@@ -44,3 +44,5 @@ services:
       - pgdata:/var/lib/postgresql/data
 volumes:
   pgdata:
+  certbot-www:
+  letsencrypt:
