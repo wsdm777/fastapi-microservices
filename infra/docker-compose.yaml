@@ -9,15 +9,17 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - app
+      - user_service
   certbot:
     image: certbot/certbot
     volumes:
       - certbot-www:/var/www/certbot
       - letsencrypt:/etc/letsencrypt
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done'"
+    depends_on:
+      - nginx
 
-  app:
+  user_service:
     build: ../services/user_auth
     depends_on:
       - create_schemas

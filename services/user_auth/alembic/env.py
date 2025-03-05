@@ -3,39 +3,18 @@ from sqlalchemy import engine_from_config, text
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from alembic import context
-
-from database.models import Base  # Импорт моделей
-from config import DB_HOST, DB_NAME, DB_PASS, DB_USER, SERVICE_NAME
-
-# Конфигурация Alembic
-config = context.config
-
-# Подставляем переменные из `config.py` в `.ini`
-section = config.config_ini_section
-config.set_section_option(section, "DB_HOST", DB_HOST)
-config.set_section_option(section, "DB_USER", DB_USER)
-config.set_section_option(section, "DB_NAME", DB_NAME)
-config.set_section_option(section, "DB_PASS", DB_PASS)
-
-# Настройка логирования
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
-# Указываем `metadata` для автогенерации миграций
-target_metadata = Base.metadata
-
-from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
-from alembic import context
-
 from database.models import Base
-from config import DB_HOST, DB_NAME, DB_PASS, DB_USER
+from config import (
+    DB_HOST,
+    DB_NAME,
+    DB_PASS,
+    DB_USER,
+    SERVICE_NAME,
+    SUPERUSER_EMAIL,
+    SUPERUSER_PASSWORD,
+)
+from repository.user_repo import hash_password
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
 config = context.config
 
 section = config.config_ini_section
@@ -58,6 +37,40 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+
+def create_superuser_if_not_exists(connection: Connection):
+    # Проверяем, есть ли хотя бы один суперпользователь
+    query_check_admin = text(
+        """
+        SELECT 1 FROM users WHERE is_superuser = true LIMIT 1
+    """
+    )
+    result = connection.execute(query_check_admin).fetchone()
+
+    # Если суперпользователь уже существует, выходим из функции
+    if result:
+        print("[INFO] Superuser already exists.")
+        return
+
+    # Если суперпользователь не найден, хешируем пароль и создаем нового
+    password_hash = hash_password(SUPERUSER_PASSWORD)
+
+    query_create_admin = text(
+        """
+        INSERT INTO users (username, password_hash, is_superuser)
+        VALUES (:username, :password_hash, true)
+    """
+    )
+    connection.execute(
+        query_create_admin,
+        {
+            "username": SUPERUSER_EMAIL,
+            "password_hash": password_hash,
+        },
+    )
+    connection.commit()
+    print("[INFO] Superuser created.")
 
 
 def get_schemas(connection: Connection):
@@ -111,7 +124,8 @@ def run_migrations_online() -> None:
         for schema in schemas:
             print(f"[INFO] Running migrations for schema: {schema}")
 
-            connection.execute(text(f"SET search_path TO {schema}"))
+            query = text("SET search_path TO :schema")
+            connection.execute(query, {"schema": schema})
 
             context.configure(
                 connection=connection,
