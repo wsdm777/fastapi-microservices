@@ -41,7 +41,6 @@ target_metadata = Base.metadata
 
 
 def create_superuser_if_not_exists(connection: Connection):
-    # Проверяем, есть ли хотя бы один суперпользователь
     query_check_admin = text(
         """
         SELECT 1 FROM users WHERE is_superuser = true LIMIT 1
@@ -49,12 +48,10 @@ def create_superuser_if_not_exists(connection: Connection):
     )
     result = connection.execute(query_check_admin).fetchone()
 
-    # Если суперпользователь уже существует, выходим из функции
     if result:
         print("[INFO] Superuser already exists.")
         return
 
-    # Если суперпользователь не найден, хешируем пароль и создаем нового
     password_hash = hash_password(SUPERUSER_PASSWORD)
 
     query_create_admin = text(
@@ -85,7 +82,6 @@ def get_schemas(connection: Connection):
 
 
 def is_valid_schema_name(schema: str) -> bool:
-    # Проверка на допустимые символы: буквы, цифры и подчеркивания
     return bool(re.match(r"^[a-zA-Z0-9_]+$", schema))
 
 
@@ -145,6 +141,8 @@ def run_migrations_online() -> None:
 
             with context.begin_transaction():
                 context.run_migrations()
+
+            create_superuser_if_not_exists(connection=connection)
 
             connection.commit()
 
