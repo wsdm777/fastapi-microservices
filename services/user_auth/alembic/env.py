@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+import re
 from sqlalchemy import engine_from_config, text
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -74,7 +75,6 @@ def create_superuser_if_not_exists(connection: Connection):
 
 
 def get_schemas(connection: Connection):
-    """Получает все схемы, относящиеся к этому сервису."""
     result = connection.execute(
         text(
             "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE :pattern"
@@ -82,6 +82,11 @@ def get_schemas(connection: Connection):
         {"pattern": f"%_{SERVICE_NAME}"},
     )
     return [row[0] for row in result.fetchall()]
+
+
+def is_valid_schema_name(schema: str) -> bool:
+    # Проверка на допустимые символы: буквы, цифры и подчеркивания
+    return bool(re.match(r"^[a-zA-Z0-9_]+$", schema))
 
 
 def run_migrations_offline() -> None:
@@ -124,8 +129,12 @@ def run_migrations_online() -> None:
         for schema in schemas:
             print(f"[INFO] Running migrations for schema: {schema}")
 
-            query = text("SET search_path TO :schema")
-            connection.execute(query, {"schema": schema})
+            if not is_valid_schema_name(schema):
+                print(f"[ERROR] Invalid schema name: {schema}")
+                continue
+
+            query = text(f"SET search_path TO {schema}")
+            connection.execute(query)
 
             context.configure(
                 connection=connection,
