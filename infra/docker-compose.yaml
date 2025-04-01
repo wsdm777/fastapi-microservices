@@ -22,18 +22,10 @@ services:
   user_service:
     build: ../services/user_auth
     depends_on:
-      - create_schemas
+      - db    
     env_file:
       - .env
       - ../services/user_auth/.env
-  create_schemas:
-    build: ./schema_creator
-    depends_on:
-      - db
-    env_file:
-      - .env
-      - ./schema_creator/schemas.env
-
   db:
     image: postgres:17.2-alpine
     restart: on-failure
