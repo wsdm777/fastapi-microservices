@@ -1,20 +1,12 @@
 from logging.config import fileConfig
-import re
 from sqlalchemy import engine_from_config, text
 from sqlalchemy import pool
-from sqlalchemy.engine import Connection
 from alembic import context
 from database.models import Base
-from config import (
-    DB_HOST,
-    DB_NAME,
-    DB_PASS,
-    DB_USER,
-    SERVICE_NAME,
-    SUPERUSER_EMAIL,
-    SUPERUSER_PASSWORD,
+from config import DB_HOST, DB_NAME, DB_PASS, DB_USER, SERVICE_NAME
+from utils.utils import (
+    create_superuser_if_not_exists,
 )
-from repository.user_repo import hash_password
 
 config = context.config
 
@@ -38,51 +30,6 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
-
-def create_superuser_if_not_exists(connection: Connection):
-    query_check_admin = text(
-        """
-        SELECT 1 FROM users WHERE is_superuser = true LIMIT 1
-    """
-    )
-    result = connection.execute(query_check_admin).fetchone()
-
-    if result:
-        print("[INFO] Superuser already exists.")
-        return
-
-    password_hash = hash_password(SUPERUSER_PASSWORD)
-
-    query_create_admin = text(
-        """
-        INSERT INTO users (username, password_hash, is_superuser)
-        VALUES (:username, :password_hash, true)
-    """
-    )
-    connection.execute(
-        query_create_admin,
-        {
-            "username": SUPERUSER_EMAIL,
-            "password_hash": password_hash,
-        },
-    )
-    connection.commit()
-    print("[INFO] Superuser created.")
-
-
-def get_schemas(connection: Connection):
-    result = connection.execute(
-        text(
-            "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE :pattern"
-        ),
-        {"pattern": f"%_{SERVICE_NAME}"},
-    )
-    return [row[0] for row in result.fetchall()]
-
-
-def is_valid_schema_name(schema: str) -> bool:
-    return bool(re.match(r"^[a-zA-Z0-9_]+$", schema))
 
 
 def run_migrations_offline() -> None:
@@ -117,36 +64,23 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        schemas = get_schemas(connection)
-        if not schemas:
-            print(f"[INFO] No schemas found for service: {SERVICE_NAME}")
-            return
+        schema = "user_auth"
 
-        for schema in schemas:
-            print(f"[INFO] Running migrations for schema: {schema}")
+        print(f"[INFO] Running migrations")
 
-            if not is_valid_schema_name(schema):
-                print(f"[ERROR] Invalid schema name: {schema}")
-                continue
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            version_table_schema=schema,
+            include_schemas=True,
+        )
 
-            query = text(f"SET search_path TO {schema}")
-            connection.execute(query)
+        with context.begin_transaction():
+            context.run_migrations()
 
-            context.configure(
-                connection=connection,
-                target_metadata=target_metadata,
-                version_table_schema=schema,
-                include_schemas=True,
-            )
+        create_superuser_if_not_exists(connection=connection)
 
-            with context.begin_transaction():
-                context.run_migrations()
-
-            create_superuser_if_not_exists(connection=connection)
-
-            connection.commit()
-
-            print(f"[SUCCESS] Done: {schema}")
+        print(f"[SUCCESS] Done: {schema}")
 
 
 if context.is_offline_mode():
