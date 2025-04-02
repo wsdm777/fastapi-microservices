@@ -26,6 +26,9 @@ services:
     env_file:
       - .env
       - ../services/user_auth/.env
+    volumes:
+      - ./keys/public.pem:/app/public.pem
+      - ./keys/private.pem:/app/private.pem
   db:
     image: postgres:17.2-alpine
     restart: on-failure

@@ -3,13 +3,19 @@ BASE_DOCKERFILE=Dockerfile.base
 
 check-base:
 	@echo "Проверка наличия базового образа $(BASE_IMAGE)..."
-	@if docker inspect --type=image $(BASE_IMAGE) >/dev/null 2>&1; then \
+	@if docker inspect --type=image $(BASE_IMAGE) &> /dev/null; then \
 		echo "Образ $(BASE_IMAGE) найден"; \
 	else \
-		echo "Сборка образа $(BASE_IMAGE)..."; \
+		echo "Сборка образа $(BASE_IMAGE)"; \
 		docker build -t $(BASE_IMAGE) -f $(BASE_DOCKERFILE) .; \
 	fi
 
+base:
+	@echo "Проверка наличия базового образа $(BASE_IMAGE)..."
+	@if docker inspect --type=image $(BASE_IMAGE) &> /dev/null; then \
+		docker rmi $(BASE_IMAGE); \
+	docker build -t $(BASE_IMAGE) -f $(BASE_DOCKERFILE) .; \
+	fi
 
 build: check-base
 	docker-compose build
