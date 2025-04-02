@@ -1,8 +1,9 @@
-from datetime import date, timedelta
-from sqlalchemy import Column, Date, ForeignKey, Index, Table, func
+from datetime import date, datetime, timedelta
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, Table, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 
 REFRESH_TOKEN_DAY_TTL = 30
+ACCESS_TOKEN_MINUTES_TTL = 15
 
 
 class Base(DeclarativeBase): ...
@@ -28,42 +29,18 @@ class RefreshToken(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user_auth.users.id", ondelete="CASCADE"), index=True
     )
-    refresh_token: Mapped[str] = mapped_column(nullable=False, unique=True)
+    refresh_jti: Mapped[str] = mapped_column(nullable=False, unique=True)
     fingerprint: Mapped[str] = mapped_column(nullable=False)
-    expired_at: Mapped[date] = mapped_column(
-        Date,
-        server_default=func.current_date() + timedelta(days=REFRESH_TOKEN_DAY_TTL),
+    expired_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.timezone("UTC", func.now())
+        + timedelta(days=REFRESH_TOKEN_DAY_TTL),
         nullable=False,
     )
 
     user = relationship(User)
 
     __table_args__ = {"schema": "user_auth"}
-
-
-class Rank(Base):
-    __tablename__ = "ranks"
-    __table_args__ = {"schema": "user_auth"}
-
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    level: Mapped[int] = mapped_column(nullable=False, unique=True)
-
-    permissions = relationship(
-        "Permission", secondary="rank_permissions", back_populates="ranks"
-    )
-
-
-class Permission(Base):
-    __tablename__ = "permissions"
-    __table_args__ = {"schema": "user_auth"}
-
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
-
-    ranks = relationship(
-        "Rank", secondary="rank_permissions", back_populates="permissions"
-    )
 
 
 rank_permissions = Table(
@@ -81,3 +58,28 @@ rank_permissions = Table(
     ),
     schema="user_auth",
 )
+
+
+class Rank(Base):
+    __tablename__ = "ranks"
+    __table_args__ = {"schema": "user_auth"}
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    level: Mapped[int] = mapped_column(nullable=False, unique=True)
+
+    permissions = relationship(
+        "Permission", secondary=rank_permissions, back_populates="ranks"
+    )
+
+
+class Permission(Base):
+    __tablename__ = "permissions"
+    __table_args__ = {"schema": "user_auth"}
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+
+    ranks = relationship(
+        "Rank", secondary=rank_permissions, back_populates="permissions"
+    )
