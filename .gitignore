@@ -1,6 +1,7 @@
-__pycache__
 *.env
+*.log
+*.pem
+__pycache__
 .venv/
 .vscode
-*.log
 docker-compose.override.yaml
