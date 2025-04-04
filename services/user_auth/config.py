@@ -7,10 +7,10 @@ if not os.getenv("POSTGRES_HOST"):
     load_dotenv(".env")
 else:
     with open("private.pem", "rb") as file:
-        JWT_PRIVATE = file.read()
+        JWT_PRIVATE = file.read().decode("utf-8").replace("\r", "")
 
     with open("public.pem", "rb") as file:
-        JWT_PUBLIC = file.read()
+        JWT_PUBLIC = file.read().decode("utf-8").replace("\r", "")
 
 DB_HOST = os.getenv("POSTGRES_HOST")
 DB_NAME = os.getenv("POSTGRES_DB")

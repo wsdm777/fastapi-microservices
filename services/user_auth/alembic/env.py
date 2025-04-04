@@ -66,8 +66,6 @@ def run_migrations_online() -> None:
     with connectable.connect() as connection:
         schema = "user_auth"
 
-        print(f"[INFO] Running migrations")
-
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
@@ -79,8 +77,6 @@ def run_migrations_online() -> None:
             context.run_migrations()
 
         create_superuser_if_not_exists(connection=connection)
-
-        print(f"[SUCCESS] Done: {schema}")
 
 
 if context.is_offline_mode():

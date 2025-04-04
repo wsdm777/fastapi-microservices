@@ -1,5 +1,5 @@
-from datetime import date, datetime, timedelta
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, Table, func
+from datetime import datetime, timedelta
+from sqlalchemy import Column, DateTime, ForeignKey, Table, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 
 REFRESH_TOKEN_DAY_TTL = 30

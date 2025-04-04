@@ -5,7 +5,7 @@ from auth.repository import AuthRepository
 from user.repository import UserRepository
 from database.models import RefreshToken
 from database.session import get_async_session
-from utils.utils import generate_access_token, generate_refresh_token, verify_password
+from auth.utils import generate_access_token, generate_refresh_token, verify_password
 
 
 class AuthService:
@@ -22,13 +22,15 @@ class AuthService:
             )
         return True
 
-    async def login(self, login: str, password: str, fingerprint: str):
+    async def login(
+        self, login: str, password: str, fingerprint: str
+    ) -> tuple[str, str]:
         await self.authenticate_user(login, password)
 
         user = await self.user_repository.get_user(login=login, load_related=True)
 
         ref_token, ref_jti = generate_refresh_token(user.id)
-        access_token = generate_access_token(user)
+        access_token = generate_access_token(user, ref_jti)
 
         token = RefreshToken(
             user_id=user.id, refresh_jti=ref_jti, fingerprint=fingerprint
@@ -38,3 +40,14 @@ class AuthService:
         await self.session.commit()
 
         return access_token, ref_token
+
+    async def logout(self, ref_jti: str) -> bool:
+        deleted_rows = await self.auth_repository.delete_refresh_token(ref_jti)
+        if deleted_rows != 1:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Something went wrong",
+            )
+        await self.session.commit()
+
+        return True
