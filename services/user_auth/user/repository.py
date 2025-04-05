@@ -9,6 +9,9 @@ class BaseRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    def add(self, obj):
+        self.session.add(obj)
+
 
 class UserRepository(BaseRepository):
     def __init__(self, session: AsyncSession):

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if ! command -v openssl &> /dev/null; then
-    echo "Ошибка: OpenSSL не установлен. Установите его и попробуйте снова."
+    echo "Ошибка: OpenSSL не установлен"
     exit 1
 fi
 

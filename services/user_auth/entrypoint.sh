@@ -1,7 +1,4 @@
 #!/bin/sh
-echo "Running migrations"
-poetry run alembic upgrade head
-
 UVICORN_WORKERS=${UVICORN_WORKERS:-1}
 
 echo "Starting application with $UVICORN_WORKERS workers..."

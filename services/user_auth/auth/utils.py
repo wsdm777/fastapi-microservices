@@ -7,18 +7,6 @@ from config import JWT_PRIVATE
 from database.models import ACCESS_TOKEN_MINUTES_TTL, REFRESH_TOKEN_DAY_TTL, User
 
 
-def hash_password(password: str) -> str:
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt)
-    return hashed_password.decode("utf-8")
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-    )
-
-
 def generate_refresh_token(
     user_id: int, expires_delta: timedelta = timedelta(days=REFRESH_TOKEN_DAY_TTL)
 ) -> tuple[str, str]:

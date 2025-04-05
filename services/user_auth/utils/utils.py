@@ -1,7 +1,7 @@
 from sqlalchemy import Connection, text
 
 from config import SUPERUSER_EMAIL, SUPERUSER_PASSWORD
-from auth.utils import hash_password
+from database.models import User
 
 
 def create_superuser_if_not_exists(connection: Connection):
@@ -22,7 +22,7 @@ def create_superuser_if_not_exists(connection: Connection):
 
     print("Creating root user")
 
-    password_hash = hash_password(SUPERUSER_PASSWORD)
+    password_hash = User.hash_password(SUPERUSER_PASSWORD)
 
     result = connection.execute(
         text("INSERT INTO ranks (name, level) VALUES ('owner', 0) RETURNING id")

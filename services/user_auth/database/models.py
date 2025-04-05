@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
+import bcrypt
 from sqlalchemy import Column, DateTime, ForeignKey, Table, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
+
+from auth.schemas import RefreshCreate, UserCreate
 
 REFRESH_TOKEN_DAY_TTL = 30
 ACCESS_TOKEN_MINUTES_TTL = 15
@@ -20,6 +23,28 @@ class User(Base):
     rank_id: Mapped[int] = mapped_column(ForeignKey("user_auth.ranks.id"))
     password_hash: Mapped[str] = mapped_column(nullable=False)
     rank = relationship("Rank")
+
+    @classmethod
+    def create_user_obj(cls, user_data: UserCreate) -> "User":
+        return cls(
+            login=user_data.login,
+            password_hash=cls.hash_password(user_data.password),
+            name=user_data.name,
+            surname=user_data.surname,
+            rank_id=user_data.rank_id,
+        )
+
+    @staticmethod
+    def hash_password(password: str) -> str:
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt)
+        return hashed_password.decode("utf-8")
+
+    @staticmethod
+    def verify_password(plain_password: str, hashed_password: str) -> bool:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+        )
 
 
 class RefreshToken(Base):
@@ -42,22 +67,9 @@ class RefreshToken(Base):
 
     __table_args__ = {"schema": "user_auth"}
 
-
-rank_permissions = Table(
-    "rank_permissions",
-    Base.metadata,
-    Column(
-        "rank_id",
-        ForeignKey("user_auth.ranks.id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-    Column(
-        "permission_id",
-        ForeignKey("user_auth.permissions.id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-    schema="user_auth",
-)
+    @classmethod
+    def create_token_obj(cls, ref_data: RefreshCreate) -> "RefreshToken":
+        return cls(**ref_data.model_dump())
 
 
 class Rank(Base):
@@ -67,19 +79,3 @@ class Rank(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
     level: Mapped[int] = mapped_column(nullable=False, unique=True)
-
-    permissions = relationship(
-        "Permission", secondary=rank_permissions, back_populates="ranks"
-    )
-
-
-class Permission(Base):
-    __tablename__ = "permissions"
-    __table_args__ = {"schema": "user_auth"}
-
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
-
-    ranks = relationship(
-        "Rank", secondary=rank_permissions, back_populates="permissions"
-    )

@@ -10,3 +10,17 @@ class UserCreadentials(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str
+
+
+class UserCreate(BaseModel):
+    login: str = Field(min_length=4, max_length=16)
+    password: str = Field(min_length=4, max_length=50)
+    name: str
+    surname: str
+    rank_id: int
+
+
+class RefreshCreate(BaseModel):
+    user_id: int = Field(gt=0)
+    refresh_jti: str
+    fingerprint: str
