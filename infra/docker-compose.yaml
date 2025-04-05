@@ -38,7 +38,17 @@ services:
       - .env
     volumes:
       - pgdata:/var/lib/postgresql/data
+  redis:
+      image: redis:7.2-alpine
+      restart: on-failure
+      volumes:
+        - redisdata:/data
+      ports:
+        - "${REDIS_EXPOSED_PORT}:6379"
+      env_file:
+        - .env  
 volumes:
   pgdata:
   certbot-www:
   letsencrypt:
+  redisdata:
