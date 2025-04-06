@@ -3,6 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import jwt
 
 from config import JWT_PUBLIC
+from database.session import get_async_session
 
 security = HTTPBearer()
 
@@ -30,7 +31,3 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
-
-
-def get_user_with_level(max_level: int):
-    return Depends(lambda: get_current_user(max_level=max_level))
