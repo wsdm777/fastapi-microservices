@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from user.schemas import UserChangePasswordInfo, UserCreate
 from auth.schemas import AccessTokenInfo
-from dependencies.dependencies import get_current_user, require_max_level, security
+from dependencies.dependencies import get_current_user, require_max_level
 from user.schemas import UserInfo
 from user.service import UserService
 

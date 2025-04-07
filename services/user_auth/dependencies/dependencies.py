@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from auth.utils import decode_access_token
@@ -6,8 +6,6 @@ from auth.schemas import AccessTokenInfo
 from redis_client.redis import RedisRepository
 
 security = HTTPBearer()
-
-#     max_level: int | None = Query(default=None, include_in_schema=False),
 
 
 async def get_current_user(

@@ -21,7 +21,7 @@ class RedisRepository:
             )
             return True
         except Exception as e:
-            return False
+            raise ValueError(f"Ошибка {e}")
 
     async def get_user(self, user_id: int):
         try:
