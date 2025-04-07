@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User
@@ -39,3 +39,8 @@ class UserRepository(BaseRepository):
         query = select(User.password_hash).filter(User.login == login)
         password = await self.session.scalars(query)
         return password.one_or_none()
+
+    async def update_user_password(self, login: str, password: str) -> bool:
+        stmt = update(User).filter(User.login == login).values(password_hash=password)
+        res = await self.session.execute(stmt)
+        return res.rowcount

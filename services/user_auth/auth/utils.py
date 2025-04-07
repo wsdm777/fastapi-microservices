@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 import uuid
-import bcrypt
+from fastapi import HTTPException, status
 import jwt
 
-from config import JWT_PRIVATE
+from config import JWT_PRIVATE, JWT_PUBLIC
 from database.models import ACCESS_TOKEN_MINUTES_TTL, REFRESH_TOKEN_DAY_TTL, User
 
 
@@ -34,3 +34,21 @@ def generate_access_token(
     }
     token = jwt.encode(payload=payload, key=JWT_PRIVATE, algorithm="RS256")
     return token
+
+
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(
+            token,
+            JWT_PUBLIC,
+            algorithms=["RS256"],
+        )
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )

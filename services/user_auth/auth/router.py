@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from auth.schemas import LoginResponse, UserCreadentials
+from auth.schemas import AccessTokenInfo, LoginResponse, UserCreadentials
 from auth.service import AuthService
 from dependencies.dependencies import get_current_user
 
@@ -17,7 +17,8 @@ async def login(creds: UserCreadentials, service: AuthService = Depends(AuthServ
 
 @router.post("/logout")
 async def logout(
-    user: dict = Depends(get_current_user), service: AuthService = Depends(AuthService)
+    user: AccessTokenInfo = Depends(get_current_user),
+    service: AuthService = Depends(AuthService),
 ):
-    await service.logout(user["ref_jti"])
+    await service.logout(user.ref_jti)
     return JSONResponse(content={"message": "ok"})

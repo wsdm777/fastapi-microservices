@@ -3,14 +3,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from database.session import get_async_session
-from auth.schemas import UserCreate
+from redis_client.redis import RedisRepository
+from user.schemas import UserCreate
 from database.models import User
+from user.schemas import UserChangePasswordInfo
 from user.repository import UserRepository
 
 
 class UserService:
     def __init__(self, session: AsyncSession = Depends(get_async_session)):
         self.user_repository = UserRepository(session)
+        self.redis = RedisRepository()
         self.session = session
 
     async def register(self, new_user: UserCreate) -> User:
@@ -39,3 +42,18 @@ class UserService:
                 detail="Database integrity error occurred",
             )
         return user
+
+    async def change_password(self, user_data: UserChangePasswordInfo):
+        password = User.hash_password(user_data.new_password)
+        res = await self.user_repository.update_user_password(user_data.login, password)
+        if res != 1:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Something went wrong",
+            )
+
+        await self.session.commit()
+
+        await self.redis.invalidate_user_tokens(user_data.id)
+
+        return True

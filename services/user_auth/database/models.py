@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 import bcrypt
-from sqlalchemy import Column, DateTime, ForeignKey, Table, func
+from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 
-from auth.schemas import RefreshCreate, UserCreate
+from auth.schemas import RefreshCreate
+from user.schemas import UserCreate
 
 REFRESH_TOKEN_DAY_TTL = 30
 ACCESS_TOKEN_MINUTES_TTL = 15
