@@ -6,6 +6,18 @@ class UserInfo(BaseModel):
     login: str
     name: str
     surname: str
+    rank_name: str
+    rank_level: int
+
+    class Config:
+        from_attributes = True
+
+
+class UserRegisterInfo(BaseModel):
+    id: int
+    login: str
+    name: str
+    surname: str
     rank_id: int
 
     class Config:

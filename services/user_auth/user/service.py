@@ -3,9 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from database.session import get_async_session
-from redis_client.redis import RedisRepository
-from user.schemas import UserCreate
 from database.models import User
+from redis_client.redis import RedisRepository
+from user.schemas import UserCreate, UserInfo
 from user.schemas import UserChangePasswordInfo
 from user.repository import UserRepository
 
@@ -57,3 +57,19 @@ class UserService:
         await self.redis.invalidate_user_tokens(user_data.id)
 
         return True
+
+    async def get_user(self, user_id: int):
+        user = await self.user_repository.get_user(user_id, load_related=True)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Not found",
+            )
+        return {
+            "id": user.id,
+            "login": user.login,
+            "name": user.name,
+            "surname": user.surname,
+            "rank_name": user.rank.name,
+            "rank_level": user.rank.level,
+        }
