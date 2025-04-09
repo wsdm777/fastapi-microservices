@@ -1,7 +1,13 @@
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path, Query
 from fastapi.responses import JSONResponse
 
-from user.schemas import UserChangePasswordInfo, UserCreate, UserInfo
+from user.schemas import (
+    UserChangePasswordInfo,
+    UserCreate,
+    UserFilterParams,
+    UserInfo,
+    UserPaginateResponse,
+)
 from auth.schemas import AccessTokenInfo
 from dependencies.dependencies import get_current_user, require_max_level
 from user.schemas import UserRegisterInfo
@@ -11,7 +17,7 @@ from user.service import UserService
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("/register", response_model=UserRegisterInfo)
+@router.post("/register", response_model=UserRegisterInfo, summary="Регистрация")
 async def register(
     new_user: UserCreate,
     user: AccessTokenInfo = require_max_level(2),
@@ -21,7 +27,7 @@ async def register(
     return UserRegisterInfo.model_validate(registered_user)
 
 
-@router.post("/change-password")
+@router.post("/change-password", summary="Смена пароля")
 async def change_password(
     new_password: str = Body(min_length=4, max_length=50, embed=True),
     user: AccessTokenInfo = Depends(get_current_user),
@@ -33,7 +39,21 @@ async def change_password(
     return JSONResponse(content={"message": "ok"})
 
 
-@router.get("/{user_id}", response_model=UserInfo)
+@router.get(
+    "/list", response_model=UserPaginateResponse, summary="Список пользователей"
+)
+async def get_users(
+    params: UserFilterParams = Query(),
+    service: UserService = Depends(UserService),
+    user: AccessTokenInfo = Depends(get_current_user),
+):
+    users_list, cursor = await service.list_users(params=params)
+    return UserPaginateResponse.model_validate(
+        {"users": users_list, "next_cursor": cursor}
+    )
+
+
+@router.get("/{user_id}", response_model=UserInfo, summary="Получение пользователя")
 async def get_user(
     user_id: int = Path(gt=0),
     user: AccessTokenInfo = Depends(get_current_user),

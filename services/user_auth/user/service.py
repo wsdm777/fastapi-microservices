@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from database.session import get_async_session
 from database.models import User
 from redis_client.redis import RedisRepository
-from user.schemas import UserCreate, UserInfo
+from user.schemas import UserCreate, UserFilterParams, UserInfo
 from user.schemas import UserChangePasswordInfo
 from user.repository import UserRepository
 
@@ -73,3 +73,25 @@ class UserService:
             "rank_name": user.rank.name,
             "rank_level": user.rank.level,
         }
+
+    async def list_users(self, params: UserFilterParams):
+        users = await self.user_repository.get_users(params=params)
+        users_list = []
+
+        for user in users:
+            users_list.append(
+                UserInfo.model_validate(
+                    {
+                        "id": user.id,
+                        "login": user.login,
+                        "name": user.name,
+                        "surname": user.surname,
+                        "rank_name": user.rank.name,
+                        "rank_level": user.rank.level,
+                    }
+                )
+            )
+
+        next_cursor = users_list[-1].id if len(users) == params.limit else None
+
+        return users_list, next_cursor
