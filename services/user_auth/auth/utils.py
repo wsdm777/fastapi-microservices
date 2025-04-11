@@ -12,7 +12,7 @@ def generate_refresh_token(
 ) -> tuple[str, str]:
     expire = datetime.now(timezone.utc) + expires_delta
     jti = str(uuid.uuid4())
-    payload = {"exp": expire, "jti": jti, "sub": user_id}
+    payload = {"exp": expire, "jti": jti, "sub": str(user_id)}
     token = jwt.encode(payload=payload, key=JWT_PRIVATE, algorithm="RS256")
     return token, jti
 
@@ -36,13 +36,24 @@ def generate_access_token(
     return token
 
 
-def decode_access_token(token: str) -> dict:
+def decode_token(token: str, token_type=str) -> dict:
     try:
         payload = jwt.decode(
             token,
             JWT_PUBLIC,
             algorithms=["RS256"],
         )
+        if token_type == "access":
+            if "ref_jti" not in payload:
+                raise HTTPException(
+                    status_code=400, detail="Access token must contain ref_jti field"
+                )
+
+        if token_type == "refresh":
+            if "jti" not in payload:
+                raise HTTPException(
+                    status_code=400, detail="Refresh token must contain jti field"
+                )
         return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(

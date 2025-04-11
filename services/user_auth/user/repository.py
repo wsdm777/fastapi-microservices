@@ -1,4 +1,4 @@
-from sqlalchemy import and_, asc, desc, select, update
+from sqlalchemy import and_, asc, delete, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Rank, User
@@ -81,3 +81,8 @@ class UserRepository(BaseRepository):
         query = query.limit(params.limit)
         res = await self.session.execute(query)
         return res.scalars().all()
+
+    async def remove_user_by_id(self, user_id):
+        stmt = delete(User).filter(User.id == user_id)
+        result = await self.session.execute(stmt)
+        return result.rowcount

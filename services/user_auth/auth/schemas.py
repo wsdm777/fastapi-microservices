@@ -26,3 +26,8 @@ class AccessTokenInfo(BaseModel):
     ref_jti: str
     exp: datetime
     iat: datetime
+
+
+class RefreshingAccess(BaseModel):
+    refresh_token: str
+    fingerprint: str

@@ -1,11 +1,12 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.repository import AuthRepository
-from auth.schemas import RefreshCreate, UserCreadentials
+from auth.schemas import RefreshCreate, RefreshingAccess, UserCreadentials
 from user.repository import UserRepository
 from database.models import RefreshToken, User
 from database.session import get_async_session
 from auth.utils import (
+    decode_token,
     generate_access_token,
     generate_refresh_token,
 )
@@ -52,3 +53,28 @@ class AuthService:
         await self.session.commit()
 
         return True
+
+    async def refresh_acccess(self, data: RefreshingAccess):
+        refresh_info = decode_token(token=data.refresh_token, token_type="refresh")
+        token = await self.auth_repository.get_refresh_token(jti=refresh_info["jti"])
+        if token is None or token.fingerprint != data.fingerprint:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad credentials"
+            )
+        await self.auth_repository.delete_refresh_token(refresh_info["jti"])
+
+        user = await self.user_repository.get_user(id=token.user_id, load_related=True)
+
+        ref_token, ref_jti = generate_refresh_token(user.id)
+        access_token = generate_access_token(user, ref_jti)
+
+        token = RefreshToken.create_token_obj(
+            RefreshCreate(
+                user_id=user.id, refresh_jti=ref_jti, fingerprint=data.fingerprint
+            )
+        )
+
+        self.auth_repository.add(token)
+        await self.session.commit()
+
+        return access_token, ref_token

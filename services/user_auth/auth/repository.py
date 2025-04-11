@@ -1,4 +1,4 @@
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import RefreshToken
@@ -13,3 +13,8 @@ class AuthRepository(BaseRepository):
         stmt = delete(RefreshToken).filter(RefreshToken.refresh_jti == token_jti)
         result = await self.session.execute(stmt)
         return result.rowcount
+
+    async def get_refresh_token(self, jti: str) -> RefreshToken:
+        query = select(RefreshToken).filter(RefreshToken.refresh_jti == jti)
+        token = await self.session.execute(query)
+        return token.scalars().one_or_none()

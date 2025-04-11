@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from auth.utils import decode_access_token
+from auth.utils import decode_token
 from auth.schemas import AccessTokenInfo
 from redis_client.redis import RedisRepository
 
@@ -13,7 +13,7 @@ async def get_current_user(
     redis: RedisRepository = Depends(RedisRepository),
 ) -> AccessTokenInfo:
     token = credentials.credentials
-    payload = decode_access_token(token)
+    payload = decode_token(token=token, token_type="access")
 
     payload["id"] = int(payload["sub"])
     payload.pop("sub")
