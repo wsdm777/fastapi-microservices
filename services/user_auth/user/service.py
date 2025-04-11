@@ -95,3 +95,12 @@ class UserService:
         next_cursor = users_list[-1].id if len(users) == params.limit else None
 
         return users_list, next_cursor
+
+    async def remove_user(self, user_id: int) -> UserInfo:
+        rowcount = await self.user_repository.remove_user_by_id(user_id)
+        if rowcount == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+        await self.session.commit()

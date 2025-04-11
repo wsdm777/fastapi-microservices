@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Body, Depends, Path, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from fastapi.responses import JSONResponse
 
 from user.schemas import (
+    ReponseOk,
     UserChangePasswordInfo,
     UserCreate,
     UserFilterParams,
@@ -27,7 +28,7 @@ async def register(
     return UserRegisterInfo.model_validate(registered_user)
 
 
-@router.post("/change-password", summary="Смена пароля")
+@router.patch("/change-password", response_model=ReponseOk, summary="Смена пароля")
 async def change_password(
     new_password: str = Body(min_length=4, max_length=50, embed=True),
     user: AccessTokenInfo = Depends(get_current_user),
@@ -61,3 +62,17 @@ async def get_user(
 ):
     user_data = await service.get_user(user_id)
     return UserInfo.model_validate(user_data)
+
+
+@router.delete("/{user_id}", response_model=ReponseOk, summary="Удаление пользователя")
+async def delete_user(
+    user_id: int = Path(gt=0),
+    user: AccessTokenInfo = Depends(get_current_user),
+    service: UserService = Depends(UserService),
+):
+    if user.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Can not delete yourself"
+        )
+    await service.remove_user(user_id)
+    return JSONResponse(content={"message": "ok"})

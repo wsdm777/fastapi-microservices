@@ -57,3 +57,7 @@ class UserFilterParams(BaseModel):
 class UserPaginateResponse(BaseModel):
     users: list[UserInfo] | None = None
     next_cursor: int | None = None
+
+
+class ReponseOk(BaseModel):
+    message: str = Field(examples=["ok"])
