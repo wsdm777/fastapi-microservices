@@ -65,32 +65,14 @@ class UserService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Not found",
             )
-        return {
-            "id": user.id,
-            "login": user.login,
-            "name": user.name,
-            "surname": user.surname,
-            "rank_name": user.rank.name,
-            "rank_level": user.rank.level,
-        }
+        return UserInfo.model_validate(user)
 
     async def list_users(self, params: UserFilterParams):
         users = await self.user_repository.get_users(params=params)
         users_list = []
 
         for user in users:
-            users_list.append(
-                UserInfo.model_validate(
-                    {
-                        "id": user.id,
-                        "login": user.login,
-                        "name": user.name,
-                        "surname": user.surname,
-                        "rank_name": user.rank.name,
-                        "rank_level": user.rank.level,
-                    }
-                )
-            )
+            users_list.append(UserInfo.model_validate(user))
 
         next_cursor = users_list[-1].id if len(users) == params.limit else None
 

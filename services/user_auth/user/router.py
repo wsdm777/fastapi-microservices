@@ -60,8 +60,7 @@ async def get_user(
     user: AccessTokenInfo = Depends(get_current_user),
     service: UserService = Depends(UserService),
 ):
-    user_data = await service.get_user(user_id)
-    return UserInfo.model_validate(user_data)
+    return await service.get_user(user_id)
 
 
 @router.delete("/{user_id}", response_model=ReponseOk, summary="Удаление пользователя")
