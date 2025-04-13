@@ -66,7 +66,7 @@ async def get_user(
 @router.delete("/{user_id}", response_model=ReponseOk, summary="Удаление пользователя")
 async def delete_user(
     user_id: int = Path(gt=0),
-    user: AccessTokenInfo = Depends(get_current_user),
+    user: AccessTokenInfo = require_max_level(2),
     service: UserService = Depends(UserService),
 ):
     if user.id == user_id:

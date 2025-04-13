@@ -7,7 +7,7 @@ from auth.schemas import RefreshCreate
 from user.schemas import UserCreate
 
 REFRESH_TOKEN_DAY_TTL = 30
-ACCESS_TOKEN_MINUTES_TTL = 15
+ACCESS_TOKEN_MINUTES_TTL = 150
 
 
 class Base(DeclarativeBase): ...
@@ -23,7 +23,7 @@ class User(Base):
     surname: Mapped[str] = mapped_column(nullable=False)
     rank_id: Mapped[int] = mapped_column(ForeignKey("user_auth.ranks.id"))
     password_hash: Mapped[str] = mapped_column(nullable=False)
-    rank = relationship("Rank")
+    rank = relationship("Rank", back_populates="users")
 
     @classmethod
     def create_user_obj(cls, user_data: UserCreate) -> "User":
@@ -80,3 +80,5 @@ class Rank(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
     level: Mapped[int] = mapped_column(nullable=False, unique=True)
+
+    users = relationship("User", back_populates="rank")
