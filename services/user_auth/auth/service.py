@@ -54,7 +54,7 @@ class AuthService:
 
         return True
 
-    async def refresh_acccess(self, data: RefreshingAccess):
+    async def refresh_acccess(self, data: RefreshingAccess) -> tuple[str, str]:
         refresh_info = decode_token(token=data.refresh_token, token_type="refresh")
         token = await self.auth_repository.get_refresh_token(jti=refresh_info["jti"])
         if token is None or token.fingerprint != data.fingerprint:

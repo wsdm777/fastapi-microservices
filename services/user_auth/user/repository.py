@@ -82,7 +82,7 @@ class UserRepository(BaseRepository):
         res = await self.session.execute(query)
         return res.scalars().all()
 
-    async def remove_user_by_id(self, user_id):
+    async def remove_user_by_id(self, user_id: int) -> int:
         stmt = delete(User).filter(User.id == user_id)
         result = await self.session.execute(stmt)
         return result.rowcount

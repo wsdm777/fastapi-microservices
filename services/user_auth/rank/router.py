@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, Path
+from fastapi.responses import JSONResponse
 
 from rank.schemas import RankCreate, RankGetInfo, RankInfo, RanksInfo
 from auth.schemas import AccessTokenInfo
 from dependencies.dependencies import get_current_user, require_max_level
 from rank.service import RankService
-
+from user.schemas import ReponseOk
 
 router = APIRouter(prefix="/ranks", tags=["ranks"])
 
@@ -33,3 +34,9 @@ async def add_rank(
     service: RankService = Depends(RankService),
 ):
     return await service.add_rank(data)
+
+
+@router.delete("/{rank_id}", response_model=ReponseOk)
+async def remove_rank(rank_id: int, service: RankService = Depends(RankService)):
+    await service.remove_rank(rank_id)
+    return JSONResponse(content={"message": "ok"})

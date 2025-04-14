@@ -9,7 +9,7 @@ class AuthRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def delete_refresh_token(self, token_jti: str):
+    async def delete_refresh_token(self, token_jti: str) -> int:
         stmt = delete(RefreshToken).filter(RefreshToken.refresh_jti == token_jti)
         result = await self.session.execute(stmt)
         return result.rowcount

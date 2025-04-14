@@ -78,7 +78,7 @@ class UserService:
 
         return users_list, next_cursor
 
-    async def remove_user(self, user_id: int) -> UserInfo:
+    async def remove_user(self, user_id: int):
         rowcount = await self.user_repository.remove_user_by_id(user_id)
         if rowcount == 0:
             raise HTTPException(

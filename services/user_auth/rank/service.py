@@ -13,7 +13,7 @@ class RankService:
         self.rank_repository = RankRepository(session)
         self.session = session
 
-    async def get_rank(self, id):
+    async def get_rank(self, id: int) -> RankGetInfo:
         rank = await self.rank_repository.get_rank(id)
         if rank is None:
             raise HTTPException(
@@ -22,7 +22,7 @@ class RankService:
             )
         return RankGetInfo.model_validate(rank._asdict())
 
-    async def add_rank(self, rank_info: RankCreate):
+    async def add_rank(self, rank_info: RankCreate) -> Rank:
         rank = Rank.create_rank_obj(rank_info)
         try:
             self.rank_repository.add(rank)
@@ -43,8 +43,25 @@ class RankService:
             )
         return rank
 
-    async def get_ranks(self):
+    async def get_ranks(self) -> RanksInfo:
         ranks = await self.rank_repository.get_ranks()
         return RanksInfo.model_validate(
             {"ranks": [RankGetInfo.model_validate(rank._asdict()) for rank in ranks]}
         )
+
+    async def remove_rank(self, id: int):
+        try:
+            rowcount = await self.rank_repository.remove_rank(id)
+        except IntegrityError as e:
+            error = str(e.orig)
+            if "foreign key constraint" in error.lower():
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="The rank is not empty",
+                )
+        if rowcount == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Rank not found",
+            )
+        await self.session.commit()
