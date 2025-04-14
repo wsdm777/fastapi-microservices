@@ -4,6 +4,7 @@ from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 
 from auth.schemas import RefreshCreate
+from rank.schemas import RankCreate
 from user.schemas import UserCreate
 
 REFRESH_TOKEN_DAY_TTL = 30
@@ -77,8 +78,12 @@ class Rank(Base):
     __tablename__ = "ranks"
     __table_args__ = {"schema": "user_auth"}
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
     level: Mapped[int] = mapped_column(nullable=False, unique=True)
 
     users = relationship("User", back_populates="rank")
+
+    @classmethod
+    def create_rank_obj(cls, data: RankCreate) -> "Rank":
+        return cls(**data.model_dump())

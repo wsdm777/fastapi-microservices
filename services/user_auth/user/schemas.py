@@ -1,14 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, Field
 
-
-class UserRankInfo(BaseModel):
-    id: int
-    name: str
-    level: int
-
-    class Config:
-        from_attributes = True
+from rank.schemas import RankInfo
 
 
 class UserInfo(BaseModel):
@@ -16,7 +9,7 @@ class UserInfo(BaseModel):
     login: str
     name: str
     surname: str
-    rank: UserRankInfo
+    rank: RankInfo
 
     class Config:
         from_attributes = True
