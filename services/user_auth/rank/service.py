@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from rank.repository import RankRepository
-from rank.schemas import RankCreate, RankGetInfo, RankInfo
+from rank.schemas import RankCreate, RankGetInfo, RanksInfo
 from database.models import Rank
 
 
@@ -42,3 +42,9 @@ class RankService:
                 detail="Database integrity error occurred",
             )
         return rank
+
+    async def get_ranks(self):
+        ranks = await self.rank_repository.get_ranks()
+        return RanksInfo.model_validate(
+            {"ranks": [RankGetInfo.model_validate(rank._asdict()) for rank in ranks]}
+        )

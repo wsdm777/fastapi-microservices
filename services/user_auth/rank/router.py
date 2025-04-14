@@ -1,12 +1,20 @@
 from fastapi import APIRouter, Depends, Path
 
-from rank.schemas import RankCreate, RankGetInfo, RankInfo
+from rank.schemas import RankCreate, RankGetInfo, RankInfo, RanksInfo
 from auth.schemas import AccessTokenInfo
 from dependencies.dependencies import get_current_user, require_max_level
 from rank.service import RankService
 
 
 router = APIRouter(prefix="/ranks", tags=["ranks"])
+
+
+@router.get("/list", response_model=RanksInfo, summary="Список всех рангов")
+async def get_ranks(
+    user: AccessTokenInfo = Depends(get_current_user),
+    service: RankService = Depends(RankService),
+):
+    return await service.get_ranks()
 
 
 @router.get("/{rank_id}", response_model=RankGetInfo, summary="Получение ранга")

@@ -14,3 +14,7 @@ class RankGetInfo(RankInfo):
 class RankCreate(BaseModel):
     name: str
     level: int
+
+
+class RanksInfo(BaseModel):
+    ranks: list[RankGetInfo]

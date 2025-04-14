@@ -21,3 +21,14 @@ class RankRepository(BaseRepository):
         )
         rank = await self.session.execute(query)
         return rank.one_or_none()
+
+    async def get_ranks(self):
+        query = (
+            select(
+                Rank.id, Rank.name, Rank.level, func.count(User.id).label("user_count")
+            )
+            .join(User, Rank.users, isouter=True)
+            .group_by(Rank.id)
+        )
+        rank = await self.session.execute(query)
+        return rank.all()
