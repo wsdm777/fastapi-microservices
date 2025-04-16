@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from fastapi.responses import JSONResponse
 
 from rank.schemas import RankCreate, RankGetInfo, RankInfo, RanksInfo
@@ -33,6 +33,11 @@ async def add_rank(
     user: AccessTokenInfo = require_max_level(2),
     service: RankService = Depends(RankService),
 ):
+    if data.level <= user.level:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You cannot create rank with this level",
+        )
     return await service.add_rank(data)
 
 
@@ -42,5 +47,5 @@ async def remove_rank(
     user: AccessTokenInfo = require_max_level(2),
     service: RankService = Depends(RankService),
 ):
-    await service.remove_rank(rank_id)
+    await service.remove_rank(rank_id, user.level)
     return JSONResponse(content={"message": "ok"})
