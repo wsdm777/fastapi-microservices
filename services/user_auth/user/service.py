@@ -19,6 +19,17 @@ class UserService:
         self.session = session
 
     async def register(self, new_user: UserCreate) -> User:
+        """Регистрация пользователя.
+
+        Args:
+            new_user (UserCreate): Данные нового пользователя
+
+        - У пользователя должен быть уникальный логин
+        - У пользователя должен быть существующий ранг
+
+        Returns:
+            User: ORM модель нового пользователя
+        """
         user = User.create_user_obj(new_user)
         try:
             self.user_repository.add(user)
@@ -46,6 +57,17 @@ class UserService:
         return user
 
     async def change_password(self, user_data: UserChangePasswordInfo):
+        """_summary_
+
+        Args:
+            user_data (UserChangePasswordInfo): _description_
+
+        Raises:
+            HTTPException: 500 Ошибка в случае если пароль не сменился или сменилось несколько паролей
+
+        Returns:
+            _type_: _description_
+        """
         password = User.hash_password(user_data.new_password)
         res = await self.user_repository.update_user_password(user_data.login, password)
         if res != 1:
@@ -58,8 +80,6 @@ class UserService:
 
         await self.redis.invalidate_user_tokens(user_data.id)
 
-        return True
-
     async def get_user(self, user_id: int):
         user = await self.user_repository.get_user(user_id, load_related=True)
         if user is None:
@@ -69,7 +89,15 @@ class UserService:
             )
         return UserInfo.model_validate(user)
 
-    async def list_users(self, params: UserFilterParams):
+    async def list_users(self, params: UserFilterParams) -> tuple[list, int | None]:
+        """Получение списка пользователей.
+
+        Args:
+            params (UserFilterParams): Параметры пагинации
+
+        Returns:
+            tuple[list | None, int | None]: Кортеж в формате (список пользователей, курсор последнего пользователя)
+        """
         users = await self.user_repository.get_users(params=params)
         users_list = []
 
@@ -81,6 +109,13 @@ class UserService:
         return users_list, next_cursor
 
     async def remove_user(self, user_id: int, user_level: int):
+        """Удаление пользователя.
+
+        Args:
+            user_id (int): ID удаляемого пользователя
+            user_level (int): Уровень доступа пользователя, который удаляет
+
+        """
         rank_id = await self.user_repository.remove_user_by_id(user_id)
 
         if rank_id is None:
@@ -90,6 +125,12 @@ class UserService:
             )
 
         rank = await self.rank_repository.get_rank(rank_id)
+
+        if rank is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Rank not found",
+            )
         rank_level = rank[2]
 
         if rank_level < user_level:
@@ -103,11 +144,11 @@ class UserService:
     async def change_user_rank(
         self, user_level: int, rank_id: int, changed_user_id: int
     ):
-        """Меняет ранг пользователя
+        """Меняет ранг пользователя, проверяя права вызывающего.
 
         Args:
             user_level (int): Уровень доступа пользователя который изменяет ранг
-            rank_id (int): Id нового ранга
+            rank_id (int): ID нового ранга
             changed_user_id (int): Пользователь чей ранг изменяется
 
         """
@@ -145,3 +186,5 @@ class UserService:
 
         await self.user_repository.change_user_rank(changed_user_id, rank_id)
         await self.session.commit()
+
+        await self.redis.invalidate_user_tokens(changed_user_id)
