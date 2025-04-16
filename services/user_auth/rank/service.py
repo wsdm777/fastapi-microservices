@@ -49,9 +49,21 @@ class RankService:
             {"ranks": [RankGetInfo.model_validate(rank._asdict()) for rank in ranks]}
         )
 
-    async def remove_rank(self, id: int):
+    async def remove_rank(self, id: int, user_level: int):
         try:
-            rowcount = await self.rank_repository.remove_rank(id)
+            rank_level = await self.rank_repository.remove_rank(id)
+
+            if rank_level is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Rank not found",
+                )
+            if rank_level <= user_level:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You cannot delete this rank",
+                )
+
         except IntegrityError as e:
             error = str(e.orig)
             if "foreign key constraint" in error.lower():
@@ -59,9 +71,4 @@ class RankService:
                     status_code=status.HTTP_409_CONFLICT,
                     detail="The rank is not empty",
                 )
-        if rowcount == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Rank not found",
-            )
         await self.session.commit()

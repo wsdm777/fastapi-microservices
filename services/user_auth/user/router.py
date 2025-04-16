@@ -73,5 +73,5 @@ async def delete_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Can not delete yourself"
         )
-    await service.remove_user(user_id)
+    await service.remove_user(user_id, user.level)
     return JSONResponse(content={"message": "ok"})

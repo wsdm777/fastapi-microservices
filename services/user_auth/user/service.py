@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from database.session import get_async_session
 from database.models import User
 from redis_client.redis import RedisRepository
+from rank.repository import RankRepository
 from user.schemas import UserCreate, UserFilterParams, UserInfo
 from user.schemas import UserChangePasswordInfo
 from user.repository import UserRepository
@@ -13,6 +14,7 @@ from user.repository import UserRepository
 class UserService:
     def __init__(self, session: AsyncSession = Depends(get_async_session)):
         self.user_repository = UserRepository(session)
+        self.rank_repository = RankRepository(session)
         self.redis = RedisRepository()
         self.session = session
 
@@ -78,11 +80,22 @@ class UserService:
 
         return users_list, next_cursor
 
-    async def remove_user(self, user_id: int):
-        rowcount = await self.user_repository.remove_user_by_id(user_id)
-        if rowcount == 0:
+    async def remove_user(self, user_id: int, user_level: int):
+        rank_id = await self.user_repository.remove_user_by_id(user_id)
+
+        if rank_id is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
+
+        rank = await self.rank_repository.get_rank(rank_id)
+        rank_level = rank[2]
+
+        if rank_level < user_level:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You cannot delete this user",
+            )
+
         await self.session.commit()
