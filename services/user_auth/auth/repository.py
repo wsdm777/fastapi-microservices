@@ -11,10 +11,8 @@ class AuthRepository(BaseRepository):
 
     async def delete_refresh_token(self, token_jti: str) -> int:
         stmt = delete(RefreshToken).filter(RefreshToken.refresh_jti == token_jti)
-        result = await self.session.execute(stmt)
-        return result.rowcount
+        return (await self.session.execute(stmt)).rowcount
 
     async def get_refresh_token(self, jti: str) -> RefreshToken:
         query = select(RefreshToken).filter(RefreshToken.refresh_jti == jti)
-        token = await self.session.execute(query)
-        return token.scalars().one_or_none()
+        return (await self.session.execute(query)).scalar_one_or_none()

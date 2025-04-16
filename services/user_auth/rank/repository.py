@@ -19,8 +19,7 @@ class RankRepository(BaseRepository):
             .group_by(Rank.id)
             .filter(Rank.id == id)
         )
-        rank = await self.session.execute(query)
-        return rank.one_or_none()
+        return (await self.session.execute(query)).one_or_none()
 
     async def get_ranks(self):
         query = (
@@ -31,10 +30,8 @@ class RankRepository(BaseRepository):
             .group_by(Rank.id)
             .order_by(Rank.id)
         )
-        rank = await self.session.execute(query)
-        return rank.all()
+        return (await self.session.execute(query)).all()
 
     async def remove_rank(self, id: int) -> int:
-        stmt = delete(Rank).filter(Rank.id == id)
-        result = await self.session.execute(stmt)
-        return result.rowcount
+        stmt = delete(Rank).filter(Rank.id == id).returning(Rank.level)
+        return (await self.session.execute(stmt)).scalar_one_or_none()

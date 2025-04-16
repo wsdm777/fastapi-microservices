@@ -34,18 +34,15 @@ class UserRepository(BaseRepository):
             query = query.filter(User.login == login)
         if load_related:
             query = query.options(joinedload(User.rank))
-        user = await self.session.scalars(query)
-        return user.one_or_none()
+        return (await self.session.scalars(query)).one_or_none()
 
     async def get_user_password(self, login: str) -> str | None:
         query = select(User.password_hash).filter(User.login == login)
-        password = await self.session.scalars(query)
-        return password.one_or_none()
+        return (await self.session.execute(query)).scalar_one_or_none()
 
     async def update_user_password(self, login: str, password: str) -> bool:
         stmt = update(User).filter(User.login == login).values(password_hash=password)
-        res = await self.session.execute(stmt)
-        return res.rowcount
+        return (await self.session.execute(stmt)).rowcount
 
     async def get_users(self, params: UserFilterParams):
         query = select(User).join(User.rank).options(contains_eager(User.rank))
@@ -79,10 +76,8 @@ class UserRepository(BaseRepository):
                 query = query.filter(User.id < cursor_value)
 
         query = query.limit(params.limit)
-        res = await self.session.execute(query)
-        return res.scalars().all()
+        return (await self.session.execute(query)).scalars().all()
 
     async def remove_user_by_id(self, user_id: int) -> int:
-        stmt = delete(User).filter(User.id == user_id)
-        result = await self.session.execute(stmt)
-        return result.rowcount
+        stmt = delete(User).filter(User.id == user_id).returning(User.rank_id)
+        return (await self.session.execute(stmt)).scalar_one_or_none()
