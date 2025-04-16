@@ -32,6 +32,6 @@ class RankRepository(BaseRepository):
         )
         return (await self.session.execute(query)).all()
 
-    async def remove_rank(self, id: int) -> int:
+    async def remove_rank(self, id: int) -> int | None:
         stmt = delete(Rank).filter(Rank.id == id).returning(Rank.level)
         return (await self.session.execute(stmt)).scalar_one_or_none()

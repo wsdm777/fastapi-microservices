@@ -31,19 +31,27 @@ class AuthService:
 
         fingerprint = user.fingerprint
 
-        user = await self.user_repository.get_user(login=user.login, load_related=True)
-
-        ref_token, ref_jti = generate_refresh_token(user.id)
-        access_token = generate_access_token(user, ref_jti)
+        user_orm = await self.user_repository.get_user(
+            login=user.login, load_related=True
+        )
+        if user_orm is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+        ref_token, ref_jti = generate_refresh_token(user_orm.id)
+        access_token = generate_access_token(user_orm, ref_jti)
         token = RefreshToken.create_token_obj(
-            RefreshCreate(user_id=user.id, refresh_jti=ref_jti, fingerprint=fingerprint)
+            RefreshCreate(
+                user_id=user_orm.id, refresh_jti=ref_jti, fingerprint=fingerprint
+            )
         )
         self.auth_repository.add(token)
         await self.session.commit()
 
         return access_token, ref_token
 
-    async def logout(self, ref_jti: str) -> bool:
+    async def logout(self, ref_jti: str):
         deleted_rows = await self.auth_repository.delete_refresh_token(ref_jti)
         if deleted_rows != 1:
             raise HTTPException(
@@ -51,8 +59,6 @@ class AuthService:
                 detail="Something went wrong",
             )
         await self.session.commit()
-
-        return True
 
     async def refresh_acccess(self, data: RefreshingAccess) -> tuple[str, str]:
         refresh_info = decode_token(token=data.refresh_token, token_type="refresh")
@@ -64,6 +70,12 @@ class AuthService:
         await self.auth_repository.delete_refresh_token(refresh_info["jti"])
 
         user = await self.user_repository.get_user(id=token.user_id, load_related=True)
+
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
 
         ref_token, ref_jti = generate_refresh_token(user.id)
         access_token = generate_access_token(user, ref_jti)

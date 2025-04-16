@@ -43,7 +43,7 @@ class UserRepository(BaseRepository):
         query = select(User.password_hash).filter(User.login == login)
         return (await self.session.execute(query)).scalar_one_or_none()
 
-    async def update_user_password(self, login: str, password: str) -> bool:
+    async def update_user_password(self, login: str, password: str) -> int:
         stmt = update(User).filter(User.login == login).values(password_hash=password)
         return (await self.session.execute(stmt)).rowcount
 
@@ -81,7 +81,7 @@ class UserRepository(BaseRepository):
         query = query.limit(params.limit)
         return (await self.session.execute(query)).scalars().all()
 
-    async def remove_user_by_id(self, user_id: int) -> int:
+    async def remove_user_by_id(self, user_id: int) -> int | None:
         stmt = delete(User).filter(User.id == user_id).returning(User.rank_id)
         return (await self.session.execute(stmt)).scalar_one_or_none()
 

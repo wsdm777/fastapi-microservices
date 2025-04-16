@@ -36,7 +36,7 @@ def generate_access_token(
     return token
 
 
-def decode_token(token: str, token_type=str) -> dict:
+def decode_token(token: str, token_type: str) -> dict:
     try:
         payload = jwt.decode(
             token,
