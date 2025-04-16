@@ -2,7 +2,7 @@ from sqlalchemy import and_, asc, delete, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Rank, User
-from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.orm import contains_eager, selectinload
 
 from user.schemas import UserFilterParams
 
@@ -24,16 +24,19 @@ class UserRepository(BaseRepository):
         id: int | None = None,
         login: str | None = None,
         load_related: bool = False,
+        for_update: bool = False,
     ) -> User | None:
         query = select(User)
         if not login and not id:
             raise ValueError("Enter id or login")
+        if for_update:
+            query = query.with_for_update()
         if id:
             query = query.filter(User.id == id)
         if login:
             query = query.filter(User.login == login)
         if load_related:
-            query = query.options(joinedload(User.rank))
+            query = query.options(selectinload(User.rank))
         return (await self.session.scalars(query)).one_or_none()
 
     async def get_user_password(self, login: str) -> str | None:
@@ -81,3 +84,7 @@ class UserRepository(BaseRepository):
     async def remove_user_by_id(self, user_id: int) -> int:
         stmt = delete(User).filter(User.id == user_id).returning(User.rank_id)
         return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def change_user_rank(self, user_id: int, rank_id: int):
+        stmt = update(User).filter(User.id == user_id).values(rank_id=rank_id)
+        await self.session.execute(stmt)

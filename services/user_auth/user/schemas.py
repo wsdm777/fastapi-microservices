@@ -4,6 +4,11 @@ from pydantic import BaseModel, Field
 from rank.schemas import RankInfo
 
 
+class RankChangeInfo(BaseModel):
+    user_id: int
+    rank_id: int
+
+
 class UserInfo(BaseModel):
     id: int
     login: str

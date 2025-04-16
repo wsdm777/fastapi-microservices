@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from fastapi.responses import JSONResponse
 
 from user.schemas import (
+    RankChangeInfo,
     ReponseOk,
     UserChangePasswordInfo,
     UserCreate,
@@ -74,4 +75,18 @@ async def delete_user(
             status_code=status.HTTP_403_FORBIDDEN, detail="Can not delete yourself"
         )
     await service.remove_user(user_id, user.level)
+    return JSONResponse(content={"message": "ok"})
+
+
+@router.patch("/", response_model=ReponseOk, summary="Смена ранга пользователя")
+async def change_user_rank(
+    data: RankChangeInfo,
+    user: AccessTokenInfo = require_max_level(2),
+    service: UserService = Depends(UserService),
+):
+    if user.id == data.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Can not change yourself"
+        )
+    await service.change_user_rank(user.level, data.rank_id, data.user_id)
     return JSONResponse(content={"message": "ok"})

@@ -99,3 +99,49 @@ class UserService:
             )
 
         await self.session.commit()
+
+    async def change_user_rank(
+        self, user_level: int, rank_id: int, changed_user_id: int
+    ):
+        """Меняет ранг пользователя
+
+        Args:
+            user_level (int): Уровень доступа пользователя который изменяет ранг
+            rank_id (int): Id нового ранга
+            changed_user_id (int): Пользователь чей ранг изменяется
+
+        """
+        rank = await self.rank_repository.get_rank(rank_id)
+
+        if rank is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Rank not found",
+            )
+
+        rank_level = rank[2]
+
+        if rank_level < user_level:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You cannot set this rank",
+            )
+
+        changed_user = await self.user_repository.get_user(
+            changed_user_id, load_related=True, for_update=True
+        )
+
+        if changed_user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+
+        if changed_user.rank.level < user_level:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You cannot change this user",
+            )
+
+        await self.user_repository.change_user_rank(changed_user_id, rank_id)
+        await self.session.commit()
