@@ -36,7 +36,11 @@ async def add_rank(
     return await service.add_rank(data)
 
 
-@router.delete("/{rank_id}", response_model=ReponseOk)
-async def remove_rank(rank_id: int, service: RankService = Depends(RankService)):
+@router.delete("/{rank_id}", response_model=ReponseOk, summary="Удаление ранга")
+async def remove_rank(
+    rank_id: int,
+    user: AccessTokenInfo = require_max_level(2),
+    service: RankService = Depends(RankService),
+):
     await service.remove_rank(rank_id)
     return JSONResponse(content={"message": "ok"})

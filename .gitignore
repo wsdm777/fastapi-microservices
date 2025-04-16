@@ -4,4 +4,4 @@
 __pycache__
 .venv/
 .vscode
-docker-compose.override.yaml
+*.override.*
