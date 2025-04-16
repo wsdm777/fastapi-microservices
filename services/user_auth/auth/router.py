@@ -36,5 +36,5 @@ async def logout(
 async def refresh_access_token(
     data: RefreshingAccess, service: AuthService = Depends(AuthService)
 ):
-    access, refresh = await service.refresh_acccess(data)
+    access, refresh = await service.refresh_access(data)
     return LoginResponse(access_token=access, refresh_token=refresh)

@@ -35,7 +35,7 @@ class RankService:
             if "unique constraint" in error.lower():
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail="User with this level or name already exists",
+                    detail="Rank with this level or name already exists",
                 )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

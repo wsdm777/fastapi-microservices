@@ -60,7 +60,10 @@ class AuthService:
             )
         await self.session.commit()
 
-    async def refresh_acccess(self, data: RefreshingAccess) -> tuple[str, str]:
+    async def refresh_access(self, data: RefreshingAccess) -> tuple[str, str]:
+        """
+        Удаление старого refresh токена и выдача новой пары access refresh
+        """
         refresh_info = decode_token(token=data.refresh_token, token_type="refresh")
         token = await self.auth_repository.get_refresh_token(jti=refresh_info["jti"])
         if token is None or token.fingerprint != data.fingerprint:

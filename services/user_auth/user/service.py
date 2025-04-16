@@ -57,17 +57,6 @@ class UserService:
         return user
 
     async def change_password(self, user_data: UserChangePasswordInfo):
-        """_summary_
-
-        Args:
-            user_data (UserChangePasswordInfo): _description_
-
-        Raises:
-            HTTPException: 500 Ошибка в случае если пароль не сменился или сменилось несколько паролей
-
-        Returns:
-            _type_: _description_
-        """
         password = User.hash_password(user_data.new_password)
         res = await self.user_repository.update_user_password(user_data.login, password)
         if res != 1:
