@@ -1,6 +1,8 @@
 BASE_IMAGE=base
 BASE_DOCKERFILE=Dockerfile.base
 
+.PHONY: logs
+
 check-base:
 	@echo "Проверка наличия базового образа $(BASE_IMAGE)..."
 	@if docker inspect --type=image $(BASE_IMAGE) &> /dev/null; then \

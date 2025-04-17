@@ -27,6 +27,7 @@ services:
       - .env
       - ../services/user_auth/.env
     volumes:
+      - ./logs/user-auth:/logs
       - ./keys/public.pem:/app/public.pem
       - ./keys/private.pem:/app/private.pem
   db:
@@ -53,3 +54,4 @@ volumes:
   certbot-www:
   letsencrypt:
   redisdata:
+  logs:
