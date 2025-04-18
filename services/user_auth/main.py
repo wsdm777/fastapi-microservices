@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI
 
-from middleware import RequestIdMiddleware
+from middleware import RequestIdMiddleware, CurrentUserMiddleware
 from logger import setup_logging
 from auth.router import router as AuthRouter
 from user.router import router as UserRouter
@@ -10,6 +10,7 @@ from rank.router import router as RankRouter
 app = FastAPI()
 
 app.add_middleware(RequestIdMiddleware)
+app.add_middleware(CurrentUserMiddleware)
 
 setup_logging()
 logger = logging.getLogger(__name__)
