@@ -1,30 +1,26 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from auth.utils import decode_token
 from auth.schemas import AccessTokenInfo
 from redis_client.redis import RedisRepository
-
-security = HTTPBearer()
+from middleware import get_current_user_from_ctx
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
     redis: RedisRepository = Depends(RedisRepository),
 ) -> AccessTokenInfo:
-    token = credentials.credentials
-    payload = decode_token(token=token, token_type="access")
+    user = get_current_user_from_ctx()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
 
-    payload["id"] = int(payload["sub"])
-    payload.pop("sub")
-
-    timestamp = await redis.get_user(payload["id"])
-    if timestamp is not None:
-        if payload["iat"] < int(timestamp):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
-            )
-    return AccessTokenInfo.model_validate(payload)
+    timestamp = await redis.get_user_last_changes(user.id)
+    if timestamp is not None and user.iat.timestamp() < float(timestamp):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
+    return user
 
 
 def require_max_level(max_level: int):
