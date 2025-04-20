@@ -21,6 +21,10 @@ class RankRepository(BaseRepository):
         )
         return (await self.session.execute(query)).one_or_none()
 
+    async def get_rank_info(self, id: int):
+        query = select(Rank).filter(Rank.id == id)
+        return (await self.session.execute(query)).scalar_one_or_none()
+
     async def get_ranks(self):
         query = (
             select(

@@ -28,7 +28,8 @@ def setup_logging():
     os.makedirs(log_dir, exist_ok=True)
     log_filename = datetime.now().strftime("%Y-%m-%d.log")
 
-    log_format = "%(asctime)s - %(levelname)s - [%(request_id)s] - [%(user_id)s] - %(name)s - %(filename)s:%(lineno)d - %(message)s"
+    log_format = "%(asctime)s - %(levelname)s - [%(request_id)s] - [%(user_id)s] - %(name)s:%(lineno)d - %(message)s"
+    date_format = "%Y-%m-%d %H:%M:%S"
 
     logging.getLogger().addFilter(RequestIdFilter())
     logging.getLogger().addFilter(UserIdFilter())
@@ -43,7 +44,7 @@ def setup_logging():
     stream_handler = logging.StreamHandler()
     stream_handler.addFilter(RequestIdFilter())
     stream_handler.addFilter(UserIdFilter())
-    stream_handler.setFormatter(logging.Formatter(log_format))
+    stream_handler.setFormatter(logging.Formatter(fmt=log_format, datefmt=date_format))
     stream_handler.setLevel(logging.INFO)
 
     logger.addHandler(stream_handler)
@@ -58,5 +59,5 @@ def setup_logging():
 
     file_handler.addFilter(RequestIdFilter())
     file_handler.addFilter(UserIdFilter())
-    file_handler.setFormatter(logging.Formatter(log_format))
+    file_handler.setFormatter(logging.Formatter(fmt=log_format, datefmt=date_format))
     logger.addHandler(file_handler)

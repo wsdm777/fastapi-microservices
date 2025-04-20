@@ -1,10 +1,13 @@
 from datetime import datetime, timedelta, timezone
+import logging
 import uuid
 from fastapi import HTTPException, status
 import jwt
 
 from config import JWT_PRIVATE, JWT_PUBLIC
 from database.models import ACCESS_TOKEN_MINUTES_TTL, REFRESH_TOKEN_DAY_TTL, User
+
+logger = logging.getLogger(__name__)
 
 
 def generate_refresh_token(
@@ -14,6 +17,7 @@ def generate_refresh_token(
     jti = str(uuid.uuid4())
     payload = {"exp": expire, "jti": jti, "sub": str(user_id)}
     token = jwt.encode(payload=payload, key=JWT_PRIVATE, algorithm="RS256")
+    logger.info(f"Generate refresh token {jti} for user {user_id}")
     return token, jti
 
 
@@ -33,6 +37,7 @@ def generate_access_token(
         "iat": issued_time,
     }
     token = jwt.encode(payload=payload, key=JWT_PRIVATE, algorithm="RS256")
+    logger.info(f"Generate access token refjti {refresh_token_jti} for user {user.id}")
     return token
 
 
@@ -45,12 +50,14 @@ def decode_token(token: str, token_type: str) -> dict:
         )
         if token_type == "access":
             if "ref_jti" not in payload:
+                logger.warning(f'Wrong token for type "access", {token}')
                 raise HTTPException(
                     status_code=400, detail="Access token must contain ref_jti field"
                 )
 
         if token_type == "refresh":
             if "jti" not in payload:
+                logger.warning(f'Wrong token for type "refresh", {token}')
                 raise HTTPException(
                     status_code=400, detail="Refresh token must contain jti field"
                 )
