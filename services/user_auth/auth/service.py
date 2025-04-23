@@ -21,9 +21,8 @@ class AuthService:
         self.auth_repository = AuthRepository(session)
         self.session = session
 
-    async def authenticate_user(self, login: str, password: str) -> bool:
-        password_hash = await self.user_repository.get_user_password(login)
-        if not password_hash or not User.verify_password(password, password_hash):
+    async def authenticate_user(self, login: str, password: str, password_hash) -> bool:
+        if not User.verify_password(password, password_hash):
             logger.warning(f"Bad credentials for user {login}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad credentials"
@@ -31,20 +30,23 @@ class AuthService:
         return True
 
     async def login(self, user: UserCreadentials) -> tuple[str, str]:
-        await self.authenticate_user(user.login, user.password)
-
-        fingerprint = user.fingerprint
 
         user_orm = await self.user_repository.get_user(
             login=user.login, load_related=True
         )
+
         if user_orm is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad credentials"
             )
+
+        await self.authenticate_user(user.login, user.password, user_orm.password_hash)
+
+        fingerprint = user.fingerprint
+
         ref_token, ref_jti = generate_refresh_token(user_orm.id)
         access_token = generate_access_token(user_orm, ref_jti)
+
         token = RefreshToken.create_token_obj(
             RefreshCreate(
                 user_id=user_orm.id, refresh_jti=ref_jti, fingerprint=fingerprint
