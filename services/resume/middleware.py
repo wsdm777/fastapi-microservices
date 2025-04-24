@@ -7,8 +7,8 @@ from prometheus_client import Counter, Gauge, Histogram
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextvars import ContextVar
 
-from auth.utils import decode_token
-from auth.schemas import AccessTokenInfo
+from utils import decode_token
+from schemas import AccessTokenInfo
 
 request_id_ctx_var: ContextVar[str] = ContextVar("request_id")
 
@@ -46,7 +46,7 @@ class CurrentUserMiddleware(BaseHTTPMiddleware):
         if credentials:
             try:
                 token = credentials.credentials
-                payload = decode_token(token, token_type="access")
+                payload = decode_token(token)
                 payload["id"] = int(payload["sub"])
                 payload.pop("sub")
                 user = AccessTokenInfo.model_validate(payload)
@@ -81,10 +81,10 @@ IN_PROGRESS = Gauge(
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        app_name = "user-auth"
+        app_name = "resume"
         method = request.method
+        endpoint = request.url.path.replace("/resume-api", "")
         status = 500
-        endpoint = request.url.path.replace("/user-api", "")
 
         labels_base = dict(app_name=app_name, method=method, endpoint=endpoint)
         IN_PROGRESS.labels(**labels_base).inc()

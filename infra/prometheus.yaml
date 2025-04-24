@@ -1,9 +1,13 @@
 global:
-  scrape_interval: "3s"
+  scrape_interval: "15s"
 
 scrape_configs:
-  - job_name: fastapi
-    metrics_path: /metrics
+  - job_name: resume_service
+    metrics_path: /resume-api/metrics 
     static_configs:
-      - targets:
-          - "user_service:8000"
+      - targets: ["resume_service:8000"]
+
+  - job_name: user_service
+    metrics_path: /user-api/metrics 
+    static_configs:
+      - targets: ["user_service:8000"]

@@ -30,6 +30,14 @@ services:
       - ./logs/user-auth:/logs
       - ./keys/public.pem:/app/public.pem
       - ./keys/private.pem:/app/private.pem
+  resume_service:
+    build: ../services/resume
+    env_file:
+      - .env
+      - ../services/resume/.env
+    volumes:
+      - ./logs/resume:/logs
+      - ./keys/public.pem:/app/public.pem
   db:
     image: postgres:17.2-alpine
     restart: on-failure

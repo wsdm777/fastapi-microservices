@@ -13,7 +13,7 @@ from user.router import router as UserRouter
 from rank.router import router as RankRouter
 
 
-app = FastAPI()
+app = FastAPI(root_path="/user-api")
 
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(RequestIdMiddleware)
