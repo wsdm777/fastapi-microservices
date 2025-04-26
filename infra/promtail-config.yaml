@@ -17,3 +17,9 @@ scrape_configs:
           job: fastapi
           service: user-auth
           __path__: /var/log/app/user-auth/*.log
+      - targets:
+          - localhost
+        labels:
+          job: fastapi
+          service: resume
+          __path__: /var/log/app/resume/*.log

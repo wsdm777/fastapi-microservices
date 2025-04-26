@@ -22,7 +22,7 @@ services:
   user_service:
     build: ../services/user_auth
     depends_on:
-      - db    
+      - postgres    
     env_file:
       - .env
       - ../services/user_auth/.env
@@ -30,15 +30,7 @@ services:
       - ./logs/user-auth:/logs
       - ./keys/public.pem:/app/public.pem
       - ./keys/private.pem:/app/private.pem
-  resume_service:
-    build: ../services/resume
-    env_file:
-      - .env
-      - ../services/resume/.env
-    volumes:
-      - ./logs/resume:/logs
-      - ./keys/public.pem:/app/public.pem
-  db:
+  postgres:
     image: postgres:17.2-alpine
     restart: on-failure
     ports:
@@ -61,6 +53,8 @@ services:
     image: grafana/loki:2.9.3
     ports:
       - "3100:3100"
+    volumes:
+      - loki_data:/tmp/loki
     command: -config.file=/etc/loki/local-config.yaml
 
   promtail:
@@ -83,6 +77,22 @@ services:
     volumes:
       - prometheusdata:/prometheus
       - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+  resume_service:
+    build: ../services/resume
+    env_file:
+      - .env
+      - ../services/resume/.env
+    volumes:
+      - ./logs/resume:/logs
+      - ./keys/public.pem:/app/public.pem
+  mongo:
+    image: mongo:8.0.8
+    env_file:
+      - ../services/resume/.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
 volumes:
   pgdata:
   certbot-www:
@@ -91,3 +101,5 @@ volumes:
   logs:
   grafana-storage:
   prometheusdata:
+  mongodb_data:
+  loki_data:
