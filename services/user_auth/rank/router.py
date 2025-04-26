@@ -12,7 +12,7 @@ router = APIRouter(prefix="/ranks", tags=["ranks"])
 
 @router.get("/list", response_model=RanksInfo, summary="Список всех рангов")
 async def get_ranks(
-    user: AccessTokenInfo = Depends(get_current_user),
+    _: AccessTokenInfo = Depends(get_current_user),
     service: RankService = Depends(RankService),
 ):
     return await service.get_ranks()
@@ -21,7 +21,7 @@ async def get_ranks(
 @router.get("/{rank_id}", response_model=RankGetInfo, summary="Получение ранга")
 async def get_rank(
     rank_id: int = Path(gt=0),
-    user: AccessTokenInfo = Depends(get_current_user),
+    _: AccessTokenInfo = Depends(get_current_user),
     service: RankService = Depends(RankService),
 ):
     return await service.get_rank(rank_id)

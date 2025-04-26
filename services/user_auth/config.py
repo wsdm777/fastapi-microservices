@@ -15,10 +15,10 @@ else:
     with open("public.pem", "rb") as file:
         JWT_PUBLIC = file.read().decode("utf-8").replace("\r", "")
 
-DB_NAME = os.getenv("POSTGRES_DB")
-DB_USER = os.getenv("POSTGRES_USER")
-DB_PASS = os.getenv("POSTGRES_PASSWORD")
-SUPERUSER_EMAIL = os.getenv("SUPERUSER_LOGIN")
-SUPERUSER_PASSWORD = os.getenv("SUPERUSER_PASSWORD")
+DB_NAME = os.getenv("POSTGRES_DB", "postgres")
+DB_USER = os.getenv("POSTGRES_USER", "postgres")
+DB_PASS = os.getenv("POSTGRES_PASSWORD", "postgres")
+SUPERUSER_EMAIL = os.getenv("SUPERUSER_LOGIN", "sth@email.com")
+SUPERUSER_PASSWORD = os.getenv("SUPERUSER_PASSWORD", "qwerty")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = 6379

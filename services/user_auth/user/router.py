@@ -22,7 +22,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.post("/register", response_model=UserRegisterInfo, summary="Регистрация")
 async def register(
     new_user: UserCreate,
-    user: AccessTokenInfo = require_max_level(2),
+    _: AccessTokenInfo = require_max_level(2),
     service: UserService = Depends(UserService),
 ):
     registered_user = await service.register(new_user)
@@ -47,7 +47,7 @@ async def change_password(
 async def get_users(
     params: UserFilterParams = Query(),
     service: UserService = Depends(UserService),
-    user: AccessTokenInfo = Depends(get_current_user),
+    _: AccessTokenInfo = Depends(get_current_user),
 ):
     users_list, cursor = await service.list_users(params=params)
     return UserPaginateResponse.model_validate(
@@ -58,7 +58,7 @@ async def get_users(
 @router.get("/{user_id}", response_model=UserInfo, summary="Получение пользователя")
 async def get_user(
     user_id: int = Path(gt=0),
-    user: AccessTokenInfo = Depends(get_current_user),
+    _: AccessTokenInfo = Depends(get_current_user),
     service: UserService = Depends(UserService),
 ):
     return await service.get_user(user_id)
