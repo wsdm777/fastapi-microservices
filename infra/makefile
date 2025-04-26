@@ -16,8 +16,8 @@ base:
 	@echo "Проверка наличия базового образа $(BASE_IMAGE)..."
 	@if docker inspect --type=image $(BASE_IMAGE) &> /dev/null; then \
 		docker rmi $(BASE_IMAGE); \
-	docker build -t $(BASE_IMAGE) -f $(BASE_DOCKERFILE) .; \
 	fi
+	docker build -t $(BASE_IMAGE) -f $(BASE_DOCKERFILE) .;
 
 build: check-base
 	docker-compose build

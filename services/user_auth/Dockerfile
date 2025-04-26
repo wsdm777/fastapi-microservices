@@ -1,6 +1,6 @@
 FROM base
 
-RUN poetry install --with user-auth
+RUN poetry install --only user-auth
 
 COPY . .
 
