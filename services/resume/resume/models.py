@@ -13,6 +13,7 @@ class Experience(BaseModel):
 
 
 class ResumeBase(BaseModel):
+    user_id: int
     first_name: str
     second_name: str
     email: EmailStr
@@ -41,3 +42,9 @@ class Resume(Document, ResumeBase):
 
 class ResumeResponse(ResumeBase):
     id: PydanticObjectId
+
+
+class ResumePagination(BaseModel):
+    page: int
+    page_size: int = 10
+    minimal_experience_age: int | None = None

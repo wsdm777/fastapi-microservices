@@ -1,5 +1,6 @@
 from time import time
 import uuid
+
 from fastapi import HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
@@ -7,7 +8,7 @@ from prometheus_client import Counter, Gauge, Histogram
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextvars import ContextVar
 
-from utils import decode_token
+from utils import decode_token, security
 from schemas import AccessTokenInfo
 
 request_id_ctx_var: ContextVar[str] = ContextVar("request_id")
@@ -16,8 +17,6 @@ request_id_ctx_var: ContextVar[str] = ContextVar("request_id")
 def get_request_id() -> str:
     return request_id_ctx_var.get()
 
-
-security = HTTPBearer(auto_error=False)
 
 current_user_ctx_var: ContextVar[AccessTokenInfo | None] = ContextVar(
     "current_user", default=None

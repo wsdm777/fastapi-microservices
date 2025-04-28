@@ -39,4 +39,6 @@ optional = true
 [tool.poetry.group.resume.dependencies]
 beanie = "^1.29.0"
 pydantic = {extras = ["email"], version = "^2.11.3"}
+python-dateutil = "^2.9.0.post0"
+httpx = "^0.28.1"
 

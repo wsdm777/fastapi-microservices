@@ -20,7 +20,11 @@ async def lifespan(app: FastAPI):
     client = AsyncIOMotorClient(MONGO_URL)
     database = client["hrm"]
     await init_beanie(database=database, document_models=[Resume])
+
+    app.state.mongo_client = client
     yield
+
+    client.close()
 
 
 app = FastAPI(root_path="/resume-api", lifespan=lifespan)
