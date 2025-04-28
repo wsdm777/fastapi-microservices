@@ -1,4 +1,4 @@
-from sqlalchemy import and_, asc, delete, desc, select, update
+from sqlalchemy import and_, asc, delete, desc, select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Rank, User
@@ -53,7 +53,6 @@ class UserRepository(BaseRepository):
         sort_type = asc if params.sort_order == "asc" else desc
 
         query = query.order_by(
-            sort_type(Rank.level),
             sort_type(User.surname),
             sort_type(User.name),
             sort_type(User.id),
@@ -71,12 +70,19 @@ class UserRepository(BaseRepository):
         if filters:
             query = query.filter(and_(*filters))
 
-        if params.cursor:
-            cursor_value = int(params.cursor)
+        cursor = params.decoded_cursor
+
+        if cursor is not None:
             if params.sort_order == "asc":
-                query = query.filter(User.id > cursor_value)
+                query = query.filter(
+                    tuple_(User.id, User.surname, User.name)
+                    > (cursor.id, cursor.surname, cursor.name)
+                )
             else:
-                query = query.filter(User.id < cursor_value)
+                query = query.filter(
+                    tuple_(User.id, User.surname, User.name)
+                    < (cursor.id, cursor.surname, cursor.name)
+                )
 
         query = query.limit(params.limit)
         return (await self.session.execute(query)).scalars().all()

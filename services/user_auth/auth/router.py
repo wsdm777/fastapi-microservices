@@ -9,7 +9,7 @@ from auth.schemas import (
 )
 from auth.service import AuthService
 from dependencies.dependencies import get_current_user
-from user.schemas import ReponseOk
+from user.schemas import ResponseOk
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -21,7 +21,7 @@ async def login(creds: UserCreadentials, service: AuthService = Depends(AuthServ
     return LoginResponse(access_token=access, refresh_token=refresh)
 
 
-@router.post("/logout", response_model=ReponseOk, summary="Удаление refresh токена")
+@router.post("/logout", response_model=ResponseOk, summary="Удаление refresh токена")
 async def logout(
     user: AccessTokenInfo = Depends(get_current_user),
     service: AuthService = Depends(AuthService),

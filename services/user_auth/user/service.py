@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +7,12 @@ from database.session import get_async_session
 from database.models import User
 from redis_client.redis import RedisRepository
 from rank.repository import RankRepository
-from user.schemas import UserCreate, UserFilterParams, UserInfo
+from user.schemas import (
+    Cursor,
+    UserCreate,
+    UserFilterParams,
+    UserInfo,
+)
 from user.schemas import UserChangePasswordInfo
 from user.repository import UserRepository
 
@@ -96,22 +100,24 @@ class UserService:
         logger.info(f"Get user {user.id} info")
         return UserInfo.model_validate(user)
 
-    async def list_users(self, params: UserFilterParams) -> tuple[list, int | None]:
+    async def list_users(self, params: UserFilterParams) -> tuple[list, Cursor | None]:
         """Получение списка пользователей.
 
         Args:
             params (UserFilterParams): Параметры пагинации
 
         Returns:
-            tuple[list | None, int | None]: Кортеж в формате (список пользователей, курсор последнего пользователя)
+            tuple[list | None, Cursor | None]: Кортеж в формате (список пользователей, курсор последнего пользователя)
         """
+
         users = await self.user_repository.get_users(params=params)
-        users_list = []
 
-        for user in users:
-            users_list.append(UserInfo.model_validate(user))
+        users_list = [UserInfo.model_validate(user) for user in users]
 
-        next_cursor = users_list[-1].id if len(users) == params.limit else None
+        if users_list and len(users_list) == params.limit:
+            next_cursor = Cursor.model_validate(users_list[-1].model_dump())
+        else:
+            next_cursor = None
         logger.info(f"Get users info with params {params}")
         return users_list, next_cursor
 

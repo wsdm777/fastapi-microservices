@@ -5,7 +5,7 @@ from rank.schemas import RankCreate, RankGetInfo, RankInfo, RanksInfo
 from auth.schemas import AccessTokenInfo
 from dependencies.dependencies import get_current_user, require_max_level
 from rank.service import RankService
-from user.schemas import ReponseOk
+from user.schemas import ResponseOk
 
 router = APIRouter(prefix="/ranks", tags=["ranks"])
 
@@ -41,7 +41,7 @@ async def add_rank(
     return await service.add_rank(data)
 
 
-@router.delete("/{rank_id}", response_model=ReponseOk, summary="Удаление ранга")
+@router.delete("/{rank_id}", response_model=ResponseOk, summary="Удаление ранга")
 async def remove_rank(
     rank_id: int,
     user: AccessTokenInfo = require_max_level(2),

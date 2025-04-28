@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from user.schemas import (
     RankChangeInfo,
-    ReponseOk,
+    ResponseOk,
     UserChangePasswordInfo,
     UserCreate,
     UserFilterParams,
@@ -29,7 +29,7 @@ async def register(
     return UserRegisterInfo.model_validate(registered_user)
 
 
-@router.patch("/change-password", response_model=ReponseOk, summary="Смена пароля")
+@router.patch("/change-password", response_model=ResponseOk, summary="Смена пароля")
 async def change_password(
     new_password: str = Body(min_length=4, max_length=50, embed=True),
     user: AccessTokenInfo = Depends(get_current_user),
@@ -64,7 +64,7 @@ async def get_user(
     return await service.get_user(user_id)
 
 
-@router.delete("/{user_id}", response_model=ReponseOk, summary="Удаление пользователя")
+@router.delete("/{user_id}", response_model=ResponseOk, summary="Удаление пользователя")
 async def delete_user(
     user_id: int = Path(gt=0),
     user: AccessTokenInfo = require_max_level(2),
@@ -78,7 +78,7 @@ async def delete_user(
     return JSONResponse(content={"message": "ok"})
 
 
-@router.patch("/", response_model=ReponseOk, summary="Смена ранга пользователя")
+@router.patch("/", response_model=ResponseOk, summary="Смена ранга пользователя")
 async def change_user_rank(
     data: RankChangeInfo,
     user: AccessTokenInfo = require_max_level(2),
