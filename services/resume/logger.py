@@ -4,22 +4,25 @@ import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from middleware import get_request_id, get_current_user_from_ctx
+from middleware import get_request_id
+from middleware import get_current_user_id_from_ctx
 
 
 class RequestIdFilter(logging.Filter):
     def filter(self, record):
-        record.request_id = get_request_id()
+        try:
+            record.request_id = get_request_id()
+        except LookupError:
+            record.request_id = "kafka request"
         return True
 
 
 class UserIdFilter(logging.Filter):
     def filter(self, record):
-        user = get_current_user_from_ctx()
-        if user is not None:
-            record.user_id = user.id
-        else:
-            record.user_id = None
+        try:
+            record.user_id = get_current_user_id_from_ctx()
+        except LookupError:
+            record.request_id = "kafka"
         return True
 
 
@@ -34,9 +37,9 @@ def setup_logging():
     logging.getLogger().addFilter(RequestIdFilter())
     logging.getLogger().addFilter(UserIdFilter())
 
-    sqlalchemy_logger = logging.getLogger("sqlalchemy.engine")
-    sqlalchemy_logger.setLevel(logging.WARNING)
-    sqlalchemy_logger.propagate = False
+    kafka_logger = logging.getLogger("aiokafka.consumer")
+    kafka_logger.setLevel(logging.WARNING)
+    kafka_logger.propagate = False
 
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)

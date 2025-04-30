@@ -20,6 +20,7 @@ class ResumeService:
         new_resume = await self.repository.create_resume(
             Resume.model_validate(resume.model_dump())
         )
+
         logger.info(f"Created resume {new_resume.id}")
         return new_resume
 
@@ -31,12 +32,14 @@ class ResumeService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Not found",
             )
+
         logger.info(f"Get resume {resume_id} info")
         return resume
 
     async def get_user_resumes(self, user_id: int) -> list[Resume]:
         user_resumes = await self.repository.get_user_resumes(user_id)
         count = len(user_resumes)
+
         logger.info(f"Get user {user_id} resumes, {count=}")
         return user_resumes
 
@@ -44,6 +47,7 @@ class ResumeService:
         resumes = await self.repository.get_resumes(
             params.page, params.page_size, params.minimal_experience_age
         )
+
         logger.info(f"Get resumes info with {params=}")
         return resumes
 

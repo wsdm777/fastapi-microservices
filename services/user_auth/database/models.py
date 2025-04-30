@@ -16,13 +16,12 @@ class Base(DeclarativeBase): ...
 
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = {"schema": "user_auth"}
 
     id: Mapped[int] = mapped_column(primary_key=True)
     login: Mapped[str] = mapped_column(nullable=False, unique=True)
     name: Mapped[str] = mapped_column(nullable=False)
     surname: Mapped[str] = mapped_column(nullable=False)
-    rank_id: Mapped[int] = mapped_column(ForeignKey("user_auth.ranks.id"))
+    rank_id: Mapped[int] = mapped_column(ForeignKey("ranks.id"))
     password_hash: Mapped[str] = mapped_column(nullable=False)
     rank = relationship("Rank", back_populates="users")
 
@@ -54,7 +53,7 @@ class RefreshToken(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("user_auth.users.id", ondelete="CASCADE"), index=True
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
     refresh_jti: Mapped[str] = mapped_column(nullable=False, unique=True)
     fingerprint: Mapped[str] = mapped_column(nullable=False)
@@ -63,11 +62,10 @@ class RefreshToken(Base):
         server_default=func.timezone("UTC", func.now())
         + timedelta(days=REFRESH_TOKEN_DAY_TTL),
         nullable=False,
+        index=True,
     )
 
     user = relationship(User)
-
-    __table_args__ = {"schema": "user_auth"}
 
     @classmethod
     def create_token_obj(cls, ref_data: RefreshCreate) -> "RefreshToken":
@@ -76,7 +74,6 @@ class RefreshToken(Base):
 
 class Rank(Base):
     __tablename__ = "ranks"
-    __table_args__ = {"schema": "user_auth"}
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False, unique=True)

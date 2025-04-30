@@ -1,4 +1,5 @@
 import logging
+
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
@@ -7,6 +8,9 @@ from database.session import get_async_session
 from database.models import User
 from redis_client.redis import RedisRepository
 from rank.repository import RankRepository
+from kafka_client.schemas import UserDeleteEvent
+from middleware import get_request_id
+from kafka_client.producer import produce_user_delete_event
 from user.schemas import (
     Cursor,
     UserCreate,
@@ -69,6 +73,7 @@ class UserService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Database integrity error occurred",
             )
+
         logger.info(f"Registered user {user.id}")
         return user
 
@@ -86,8 +91,9 @@ class UserService:
             )
 
         await self.session.commit()
-        logger.info("Change password")
         await self.redis.invalidate_user_tokens(user_data.id)
+
+        logger.info("Change password")
 
     async def get_user(self, user_id: int):
         user = await self.user_repository.get_user(user_id, load_related=True)
@@ -97,6 +103,7 @@ class UserService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Not found",
             )
+
         logger.info(f"Get user {user.id} info")
         return UserInfo.model_validate(user)
 
@@ -118,15 +125,22 @@ class UserService:
             next_cursor = Cursor.model_validate(users_list[-1].model_dump())
         else:
             next_cursor = None
+
         logger.info(f"Get users info with params {params}")
         return users_list, next_cursor
 
-    async def remove_user(self, user_id: int, user_level: int):
+    async def remove_user(
+        self,
+        user_id: int,
+        user_level: int,
+        deleter_id: int,
+    ):
         """Удаление пользователя.
 
         Args:
             user_id (int): ID удаляемого пользователя
             user_level (int): Уровень доступа пользователя, который удаляет
+            deleter_id (int): ID пользователя, который удаляет
 
         """
         rank_id = await self.user_repository.remove_user_by_id(user_id)
@@ -154,9 +168,17 @@ class UserService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You cannot delete this user",
             )
+        await self.session.commit()
+
+        event = UserDeleteEvent(
+            deleter_id=deleter_id,
+            deleted_user_id=user_id,
+            request_id=get_request_id(),
+        )
+
+        await produce_user_delete_event(event)
 
         logger.info(f"Delete user {user_id}")
-        await self.session.commit()
 
     async def change_user_rank(
         self, user_level: int, rank_id: int, changed_user_id: int
@@ -210,6 +232,6 @@ class UserService:
         await self.user_repository.change_user_rank(changed_user_id, rank_id)
         await self.session.commit()
 
-        logger.info(f"Change user {changed_user_id} rank to {rank_id}")
-
         await self.redis.invalidate_user_tokens(changed_user_id)
+
+        logger.info(f"Change user {changed_user_id} rank to {rank_id}")

@@ -1,4 +1,13 @@
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    status,
+)
 from fastapi.responses import JSONResponse
 
 from user.schemas import (
@@ -74,7 +83,7 @@ async def delete_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Can not delete yourself"
         )
-    await service.remove_user(user_id, user.level)
+    await service.remove_user(user_id, user.level, user.id)
     return JSONResponse(content={"message": "ok"})
 
 

@@ -22,3 +22,4 @@ SUPERUSER_EMAIL = os.getenv("SUPERUSER_LOGIN", "sth@email.com")
 SUPERUSER_PASSWORD = os.getenv("SUPERUSER_PASSWORD", "qwerty")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = 6379
+KAFKA_URL = os.getenv("KAFKA_URL", "kafka")

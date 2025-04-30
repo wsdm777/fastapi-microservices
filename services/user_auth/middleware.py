@@ -23,9 +23,17 @@ current_user_ctx_var: ContextVar[AccessTokenInfo | None] = ContextVar(
     "current_user", default=None
 )
 
+current_user_id_ctx_var: ContextVar[int | None] = ContextVar(
+    "current_user_id", default=None
+)
 
-def get_current_user_from_ctx() -> AccessTokenInfo | None:
+
+def get_current_user_from_ctx():
     return current_user_ctx_var.get()
+
+
+def get_current_user_id_from_ctx():
+    return current_user_id_ctx_var.get()
 
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
@@ -51,6 +59,7 @@ class CurrentUserMiddleware(BaseHTTPMiddleware):
                 payload.pop("sub")
                 user = AccessTokenInfo.model_validate(payload)
                 current_user_ctx_var.set(user)
+                current_user_id_ctx_var.set(user.id)
             except HTTPException as e:
                 return JSONResponse(
                     status_code=e.status_code, content={"detail": e.detail}
