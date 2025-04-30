@@ -36,9 +36,6 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 def create_superuser_if_not_exists(connection: Connection):
-    query = text(f"SET search_path TO user_auth")
-    connection.execute(query)
-
     connection.commit()
 
     query_check_admin = text(
@@ -109,19 +106,27 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        schema = "user_auth"
-
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            version_table_schema=schema,
-            include_schemas=True,
+            include_schemas=False,
         )
 
         with context.begin_transaction():
             context.run_migrations()
 
-        create_superuser_if_not_exists(connection=connection)
+        check_users_table_exists = text(
+            """
+            SELECT 1 FROM pg_catalog.pg_tables 
+            WHERE schemaname = 'public' 
+            AND tablename = 'users' 
+            LIMIT 1
+            """
+        )
+        result = connection.execute(check_users_table_exists).fetchone()
+
+        if result:
+            create_superuser_if_not_exists(connection=connection)
 
 
 if context.is_offline_mode():
