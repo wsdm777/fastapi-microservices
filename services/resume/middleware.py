@@ -3,7 +3,6 @@ import uuid
 
 from fastapi import HTTPException, Request, Response
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer
 from prometheus_client import Counter, Gauge, Histogram
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextvars import ContextVar

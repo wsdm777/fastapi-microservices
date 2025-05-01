@@ -1,6 +1,5 @@
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from database.models import Rank, User
 from user.repository import BaseRepository

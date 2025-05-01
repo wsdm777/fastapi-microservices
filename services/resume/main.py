@@ -1,7 +1,5 @@
-import asyncio
 from contextlib import asynccontextmanager
 import logging
-import threading
 from fastapi import FastAPI, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from motor.motor_asyncio import AsyncIOMotorClient

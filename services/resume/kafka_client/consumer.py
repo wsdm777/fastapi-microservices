@@ -4,7 +4,7 @@ import json
 import logging
 from typing import Any, Callable, Dict
 
-from aiokafka import AIOKafkaConsumer, ConsumerRecord
+from aiokafka import AIOKafkaConsumer
 from pydantic import BaseModel
 
 from middleware import current_user_id_ctx_var, request_id_ctx_var
@@ -13,7 +13,7 @@ from resume.service import ResumeService
 
 logger = logging.getLogger(__name__)
 
-TOPICS = ["user.delete", "resume.create"]
+TOPICS = ["user.delete"]
 
 resume_service = ResumeService()
 

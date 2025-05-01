@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from aiokafka import AIOKafkaProducer
 from kafka_client.schemas import UserDeleteEvent
