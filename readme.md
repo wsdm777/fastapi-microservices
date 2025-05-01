@@ -65,7 +65,6 @@
 ## 📂 Основная структура проекта
 
 ```
-.
 ├── infra/                       # Инфраструктура: Docker, Prometheus, Grafana, Nginx, RSA-ключи
 │   ├── docker-compose.yaml
 │   ├── poetry.lock              # Зависимости проекта
